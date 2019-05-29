@@ -1,0 +1,10 @@
+<h2>Chat Room testing UI</h2>
+
+<div id="chatbox" style="min-height: 400px; padding: 12px; background: #f4f4f4;">
+</div>
+
+<div id="chatpanel" style="margin-top: 20px;">
+  <input type="text" id="user_id" placeholder="User ID">
+  <textarea id="msg_text" style="width: 600px; height: 100px;" autofocus></textarea>
+</div>
+

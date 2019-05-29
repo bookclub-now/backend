@@ -1,0 +1,41 @@
+version: '3'
+
+volumes:
+  pgdata:
+    external: false
+
+services:
+  postgres:
+    env_file:
+      - rel.env
+    image: postgres:11-alpine
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data/pgdata
+
+  app:
+    env_file:
+      - rel.env
+    depends_on:
+      - postgres
+    ports:
+      - "4000:4000"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c "app/bin/bookclub foreground"
+
+  bookclub:
+    container_name: bookclub
+    image: elixir:1.7-alpine
+    env_file:
+      - rel.env
+    volumes:
+      - ./:/app
+    working_dir: /app
+    depends_on:
+      - postgres
+    ports:
+      - "4000:4000"

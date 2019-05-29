@@ -1,0 +1,17 @@
+<section class="phx-hero">
+  <h1>Bookclub</h1>
+</section>
+
+<section class="row">
+  <article class="column">
+    <h2>Resources</h2>
+    <ul>
+      <li>
+        <%= link "Users", to: Routes.admin_user_path(@conn, :index) %>
+      </li>
+      <li>
+        <%= link "Clubs", to: Routes.admin_club_path(@conn, :index) %>
+      </li>
+    </ul>
+  </article>
+</section>

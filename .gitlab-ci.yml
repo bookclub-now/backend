@@ -1,0 +1,83 @@
+stages:
+  - test
+  - release
+  - to-staging
+  - to-production
+
+variables:
+  MIX_ENV: test
+  POSTGRES_HOST: postgres
+  POSTGRES_DB: bookclub_test
+  POSTGRES_USER: bookclub_test
+  POSTGRES_PASSWORD: bookclub_test
+  POSTGRES_PORT: 5432
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_DRIVER: overlay2
+  IMAGE_TAG: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+
+services:
+  - postgres:11-alpine
+
+# TODO: Add Credo and Dialyzer
+# Note: Use this setup as it's the same at Staging and Production.
+test:
+  image: elixir:1.7-alpine
+  stage: test
+  script:
+  - apk add -U --no-cache git build-base
+  - mix local.rebar --force
+  - mix local.hex --force
+  - mix deps.get
+  - mix compile
+  - mix ecto.migrate
+  - mix test
+
+release:
+  image: docker:stable
+  stage: release
+  services:
+    - docker:dind
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -t $IMAGE_TAG .
+    - docker push $IMAGE_TAG
+  only:
+    - master
+    - tags
+
+to-staging:
+  image: lwolf/kubectl_deployer:latest
+  services:
+    - docker:dind
+  stage: to-staging
+  script:
+    - kubectl config set-cluster $STAGING_K8S_CLUSTER --server=$STAGING_K8S_URL --insecure-skip-tls-verify=true
+    - kubectl config set-credentials $STAGING_K8S_USER --token=$STAGING_K8S_TOKEN
+    - kubectl config set-context default-context --cluster=$STAGING_K8S_CLUSTER --user=$STAGING_K8S_USER
+    - kubectl config use-context default-context
+    - kubectl get nodes
+    - /bin/sh ./kdeliver push state
+  environment:
+    name: staging
+    url: https://bookclub.foxboxapp.com
+  only:
+    - master
+    - tags
+
+to-production:
+  image: lwolf/kubectl_deployer:latest
+  services:
+    - docker:dind
+  stage: to-production
+  script:
+    - kubectl config set-cluster $PRODUCTION_K8S_CLUSTER --server=$PRODUCTION_K8S_URL --insecure-skip-tls-verify=true
+    - kubectl config set-credentials $PRODUCTION_K8S_USER --token=$PRODUCTION_K8S_TOKEN
+    - kubectl config set-context default-context --cluster=$PRODUCTION_K8S_CLUSTER --user=$PRODUCTION_K8S_USER
+    - kubectl config use-context default-context
+    - kubectl get nodes
+    - /bin/sh ./kdeliver push state
+  environment:
+    name: production
+    url: https://bookclub-production.foxboxapp.com
+  only:
+    - tags

@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+version=v0.1.0
+verb=$1
+noum=$2
+forced_image=$3
+action="$verb $noum"
+
+case "$action" in
+    "push state")
+        echo "Pushing K8s state to the cluster..."
+
+        if [ -z "$IMAGE_TAG" ]; then
+            echo ""
+            echo "IMAGE_TAG local variable is missing."
+            echo "Don't try this command locally on your machine!"
+            exit 1
+        elif [ -z "$CI_COMMIT_SHA" ]; then
+            echo ""
+            echo "CI_COMMIT_SHA local variable is missing."
+            echo "Don't try this command locally on your machine!"
+            exit 1
+        else
+            for f in k8s/state/*.yml
+            do
+                envsubst < $f > "k8s/.context_state/$(basename $f)"
+            done
+
+            kubectl apply -f k8s/.context_state/
+
+            rm -rf k8s/.context_state/*.yml
+        fi
+        ;;
+
+    "force deploy")
+        export IMAGE_TAG=$forced_image
+
+        for f in k8s/state/*.yml
+        do
+            envsubst < $f > "k8s/.context_state/$(basename $f)"
+        done
+
+        kubectl apply -f k8s/.context_state/
+
+        rm -rf k8s/.context_state/*.yml
+
+        export IMAGE_TAG=
+        ;;
+    *)
+        echo "Leaving..."
+esac

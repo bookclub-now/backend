@@ -1,0 +1,42 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+ name: bookclub-deployment
+ namespace: default
+ labels:
+    owner: bookclub
+    app: bookclub
+    tier: web
+spec:
+  revisionHistoryLimit: 5
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        owner: bookclub
+        app: bookclub
+        tier: web
+    spec:
+      terminationGracePeriodSeconds: 60
+      imagePullSecrets:
+      - name: bookclub-registry
+      containers:
+        - name: bookclub-container
+          image: ${IMAGE_TAG}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4000
+          args: ["bash", "-c", "app/bin/bookclub foreground"]
+          envFrom:
+            - configMapRef:
+                name: bookclub-config-map
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 4000
+

@@ -1,0 +1,6 @@
+<section class="phx-hero">
+  <h1><%= "Welcome to Bookclub" %></h1>
+  <p>
+    <%= link "Click here to Log In", to: Routes.admin_dash_board_path(@conn, :index) %>
+  </p>
+</section>

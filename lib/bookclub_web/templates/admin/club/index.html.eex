@@ -1,0 +1,24 @@
+<h1>Listing Clubs</h1>
+
+<table>
+  <thead>
+    <tr>
+      <th>Creator</th>
+      <th>Name</th>
+      <th>Author</th>
+      <th>Chapters</th>
+      <th>Photo</th>
+    </tr>
+  </thead>
+  <tbody>
+    <%= for club <- @clubs do %>
+        <tr>
+          <td><%="#{club.user.first_name} #{club.user.last_name}"%></td>
+          <td><%= club.book.name %></td>
+          <td><%= club.book.author %></td>
+          <td><%= club.book.chapters %></td>
+          <td><%= club.book.photo_url %></td>
+        </tr>
+    <% end %>
+  </tbody>
+</table>
